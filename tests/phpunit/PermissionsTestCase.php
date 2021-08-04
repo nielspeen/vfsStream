@@ -43,6 +43,8 @@ class PermissionsTestCase extends TestCase
             null,
             ['test_directory' => ['test.file' => '']]
         );
+
+        vfsStream::setCurrentUser(1000);
     }
 
     /**
@@ -71,7 +73,6 @@ class PermissionsTestCase extends TestCase
      */
     public function canNotChangePermissionWhenFileNotOwned(): void
     {
-        vfsStream::setCurrentUser(1000);
         $this->root->getChild('test_directory')->getChild('test.file')->chown(vfsStream::OWNER_USER_1);
         assertFalse(@chmod(vfsStream::url('root/test_directory/test.file'), 0777));
     }

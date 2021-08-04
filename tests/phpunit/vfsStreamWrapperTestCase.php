@@ -81,6 +81,7 @@ class vfsStreamWrapperTestCase extends vfsStreamWrapperBaseTestCase
         vfsStream::setup();
         vfsStreamWrapper::register();
         assertNull(vfsStreamWrapper::getRoot());
+        vfsStream::setCurrentUser(1000);
     }
 
     /**
