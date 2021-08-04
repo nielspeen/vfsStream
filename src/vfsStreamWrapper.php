@@ -636,15 +636,17 @@ class vfsStreamWrapper
      */
     private function doPermChange(string $path, vfsStreamAbstractContent $content, callable $change): bool
     {
-        if (! $content->isOwnedByUser(vfsStream::getCurrentUser())) {
-            return false;
-        }
-
-        if (self::$root->getName() !== $path) {
-            $names = $this->splitPath($path);
-            $parent = $this->getContent($names['dirname']);
-            if (! $parent->isWritable(vfsStream::getCurrentUser(), vfsStream::getCurrentGroup())) {
+        if (vfsStream::getCurrentUser() !== vfsStream::OWNER_ROOT) {
+            if (! $content->isOwnedByUser(vfsStream::getCurrentUser())) {
                 return false;
+            }
+
+            if (self::$root->getName() !== $path) {
+                $names = $this->splitPath($path);
+                $parent = $this->getContent($names['dirname']);
+                if (! $parent->isWritable(vfsStream::getCurrentUser(), vfsStream::getCurrentGroup())) {
+                    return false;
+                }
             }
         }
 

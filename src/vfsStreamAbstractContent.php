@@ -271,6 +271,10 @@ abstract class vfsStreamAbstractContent implements vfsStreamContent
      */
     public function isWritable(int $user, int $group): bool
     {
+        if (vfsStream::OWNER_ROOT === $user) {
+            return true;
+        }
+
         if ($this->user === $user) {
             $check = 0200;
         } elseif ($this->group === $group) {

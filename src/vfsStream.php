@@ -86,6 +86,12 @@ class vfsStream
      */
     private static $dotFiles = true;
 
+    /*
+     * Settable uid/gid
+     */
+    protected static $uid = null;
+    protected static $gid = null;
+
     /**
      * prepends the scheme to the given URL
      *
@@ -450,13 +456,29 @@ class vfsStream
     }
 
     /**
+     * sets current user
+     */
+    public static function setCurrentUser(int $uid): void
+    {
+        self::$uid = $uid;
+    }
+
+    /**
      * returns current user
      *
      * If the system does not support posix_getuid() the current user will be root (0).
      */
     public static function getCurrentUser(): int
     {
-        return function_exists('posix_getuid') ? posix_getuid() : self::OWNER_ROOT;
+        return is_null(self::$uid) ? (function_exists('posix_getuid') ? posix_getuid() : self::OWNER_ROOT) : self::$uid;
+    }
+
+    /**
+     * sets current group
+     */
+    public static function setCurrentGroup(int $gid): void
+    {
+        self::$gid = $gid;
     }
 
     /**
@@ -466,7 +488,7 @@ class vfsStream
      */
     public static function getCurrentGroup(): int
     {
-        return function_exists('posix_getgid') ? posix_getgid() : self::GROUP_ROOT;
+        return is_null(self::$gid) ? (function_exists('posix_getgid') ? posix_getgid() : self::GROUP_ROOT) : self::$gid;
     }
 
     /**

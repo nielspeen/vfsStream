@@ -16,6 +16,7 @@ use bovigo\vfs\vfsStreamDirectory;
 use PHPUnit\Framework\TestCase;
 
 use function bovigo\assert\assertFalse;
+use function bovigo\assert\assertTrue;
 use function bovigo\assert\expect;
 use function chgrp;
 use function chmod;
@@ -56,12 +57,33 @@ class PermissionsTestCase extends TestCase
 
     /**
      * @test
+     */
+    public function rootCanChangePermissionWhenDirectoryNotWriteable(): void
+    {
+        $this->root->getChild('test_directory')->chmod(0444);
+        vfsStream::setCurrentUser(vfsStream::OWNER_ROOT);
+        assertTrue(@chmod(vfsStream::url('root/test_directory/test.file'), 0777));
+    }
+
+    /**
+     * @test
      * @group  issue_53
      */
     public function canNotChangePermissionWhenFileNotOwned(): void
     {
+        vfsStream::setCurrentUser(1000);
         $this->root->getChild('test_directory')->getChild('test.file')->chown(vfsStream::OWNER_USER_1);
         assertFalse(@chmod(vfsStream::url('root/test_directory/test.file'), 0777));
+    }
+
+    /**
+     * @test
+     */
+    public function rootCanChangePermissionWhenFileNotOwned(): void
+    {
+        $this->root->getChild('test_directory')->getChild('test.file')->chown(vfsStream::OWNER_USER_1);
+        vfsStream::setCurrentUser(vfsStream::OWNER_ROOT);
+        assertTrue(@chmod(vfsStream::url('root/test_directory/test.file'), 0777));
     }
 
     /**
@@ -76,12 +98,32 @@ class PermissionsTestCase extends TestCase
 
     /**
      * @test
+     */
+    public function rootCanChangeOwnerWhenDirectoryNotWriteable(): void
+    {
+        $this->root->getChild('test_directory')->chmod(0444);
+        vfsStream::setCurrentUser(vfsStream::OWNER_ROOT);
+        assertTrue(@chown(vfsStream::url('root/test_directory/test.file'), vfsStream::OWNER_USER_2));
+    }
+
+    /**
+     * @test
      * @group  issue_53
      */
     public function canNotChangeOwnerWhenFileNotOwned(): void
     {
         $this->root->getChild('test_directory')->getChild('test.file')->chown(vfsStream::OWNER_USER_1);
         assertFalse(@chown(vfsStream::url('root/test_directory/test.file'), vfsStream::OWNER_USER_2));
+    }
+
+    /**
+     * @test
+     */
+    public function rootCanChangeOwnerWhenFileNotOwned(): void
+    {
+        $this->root->getChild('test_directory')->getChild('test.file')->chown(vfsStream::OWNER_USER_1);
+        vfsStream::setCurrentUser(vfsStream::OWNER_ROOT);
+        assertTrue(@chown(vfsStream::url('root/test_directory/test.file'), vfsStream::OWNER_USER_2));
     }
 
     /**
@@ -96,12 +138,32 @@ class PermissionsTestCase extends TestCase
 
     /**
      * @test
+     */
+    public function rootCanChangeGroupWhenDirectoryNotWriteable(): void
+    {
+        $this->root->getChild('test_directory')->chmod(0444);
+        vfsStream::setCurrentUser(vfsStream::OWNER_ROOT);
+        assertTrue(@chgrp(vfsStream::url('root/test_directory/test.file'), vfsStream::GROUP_USER_2));
+    }
+
+    /**
+     * @test
      * @group  issue_53
      */
     public function canNotChangeGroupWhenFileNotOwned(): void
     {
         $this->root->getChild('test_directory')->getChild('test.file')->chown(vfsStream::OWNER_USER_1);
         assertFalse(@chgrp(vfsStream::url('root/test_directory/test.file'), vfsStream::GROUP_USER_2));
+    }
+
+    /**
+     * @test
+     */
+    public function rootCanChangeGroupWhenFileNotOwned(): void
+    {
+        $this->root->getChild('test_directory')->getChild('test.file')->chown(vfsStream::OWNER_USER_1);
+        vfsStream::setCurrentUser(vfsStream::OWNER_ROOT);
+        assertTrue(@chgrp(vfsStream::url('root/test_directory/test.file'), vfsStream::GROUP_USER_2));
     }
 
     /**
@@ -121,6 +183,16 @@ class PermissionsTestCase extends TestCase
 
     /**
      * @test
+     */
+    public function rootTouchOnNonWriteableDirectoryTriggersNoError(): void
+    {
+        $this->root->chmod(0555);
+        vfsStream::setCurrentUser(vfsStream::OWNER_ROOT);
+        assertTrue(touch($this->root->url() . '/touch.txt'));
+    }
+
+    /**
+     * @test
      * @group  issue_107
      * @since  1.5.0
      */
@@ -129,5 +201,16 @@ class PermissionsTestCase extends TestCase
         $this->root->chmod(0555);
         assertFalse(@touch($this->root->url() . '/touch.txt'));
         assertFalse($this->root->hasChild('touch.txt'));
+    }
+
+    /**
+     * @test
+     */
+    public function rootTouchOnNonWriteableDirectoryCreatesFile(): void
+    {
+        $this->root->chmod(0555);
+        vfsStream::setCurrentUser(vfsStream::OWNER_ROOT);
+        assertTrue(@touch($this->root->url() . '/touch.txt'));
+        assertTrue($this->root->hasChild('touch.txt'));
     }
 }
